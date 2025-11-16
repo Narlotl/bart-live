@@ -1,0 +1,14 @@
+/* Field calculator */
+/* 5 digits with 1 precision */
+array_mean(
+    with_variable(
+        's_id',
+        shape_id,
+        eval('
+            overlay_nearest(
+                \'shapes\',
+                shape_pt_sequence,
+                limit:=2,	filter:=shape_id=''' || @s_id || ''')'
+            )
+        )
+)

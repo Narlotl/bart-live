@@ -1,0 +1,9 @@
+Import shapes and stops as CSV layers
+Reproject both
+Path to point on shapes
+Join by nearest with r_stops and paths
+Filter joined layer to suitable distance
+Geometry by expression to create points on line
+Use sequence command to add sequence number
+Refactor shape_pt_sequence on points to double
+Merge refactored and stops

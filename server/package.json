@@ -1,0 +1,8 @@
+{
+  "type": "module",
+  "dependencies": {
+    "geographiclib-geodesic": "^2.1.1",
+    "gtfs-realtime-bindings": "^1.1.1",
+    "unzipper": "^0.12.3"
+  }
+}
