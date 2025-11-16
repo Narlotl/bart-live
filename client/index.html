@@ -131,7 +131,7 @@
                 <br>
                 ${Math.round(parseFloat(message[4]) * 2.23694 /* m/s to mph */)} mph`;
 
-            const eventSource = new EventSource('http://localhost:3000');
+            const eventSource = new EventSource('http://ec2-54-185-177-3.us-west-2.compute.amazonaws.com:3000');
             eventSource.addEventListener('create', e => {
                 const messages = e.data.split(';');
                 for (let message of messages) {
