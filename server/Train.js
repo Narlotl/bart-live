@@ -107,6 +107,10 @@ export class Train {
     }
 
     distanceToNextStop() {
+        if (this.nextStation === undefined)
+            // Train is at end
+            return 0;
+
         let distance = this.distanceToNext - this.points[this.index][2];
         for (let i = this.index; i < this.points.length; i++) {
             const point = this.points[i];
