@@ -311,17 +311,18 @@ export const updateTrains = async (trains, messageObject) => {
         }
 
         // TODO: if train is leaving, use previousStop
-        let length;
+        let length = 8;
         if (tripId.length === 3)
             // 600 series trains (eBART) are always 3 long
             length = 3;
         else {
             // Regular trains use reported length
-            const arrivalObject = trainLengths[stops[0].station.substring(0, 3)][line];
-            if (arrivalObject)
-                length = arrivalObject.length;
-            else
-                length = 8;
+            let arrivalObject = trainLengths[stops[0].station.substring(0, 3)];
+            if (arrivalObject) {
+                arrivalObject = arrivalObject[line];
+                if (arrivalObject)
+                    length = arrivalObject.length;
+            }
         }
         const train = new Train(tripId, line, shape, length, points[shape], stops, previousStop, time, messageObject);
         trains.push(train);
