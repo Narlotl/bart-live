@@ -9,7 +9,7 @@ Since BART doesn't publish GPS data, this is an estimate of where trains are in 
 ### Server
 
 - For the first time you run the server, run `npm install` to get dependencies.
-- Set the KEY environment variable to your API key.
+- Set the `API_KEY` environment variable to your API key and the `CERT` and `PRIV_KEY` variables to the paths of the respective certificate files.
 - Run `node server.js`
 
 ### Client

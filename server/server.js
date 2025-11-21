@@ -1,6 +1,13 @@
-import { createServer } from 'http';
+import { createServer } from 'https';
 import { idToStation, updateTrains } from './gtfs.js';
 import { createInterface } from 'node:readline';
+import { existsSync, readFileSync } from 'fs';
+import { exit } from 'process';
+
+if (!(process.env.CERT && process.env.PRIV_KEY && existsSync(process.env.CERT) && existsSync(process.env.PRIV_KEY))) {
+    console.error('Certificate files not found');
+    exit(1);
+}
 
 const sleep = ms => new Promise((resolve, reject) => setTimeout(resolve, ms));
 
@@ -25,7 +32,10 @@ let timeStep = 1.000; // seconds
 
 const connections = [];
 
-createServer(async (req, res) => {
+createServer({
+    key: readFileSync(process.env.PRIV_KEY),
+    cert: readFileSync(process.env.CERT)
+}, async (req, res) => {
     console.log('connection');
 
     // Initialize server-sent events

@@ -4,7 +4,7 @@ import { Train } from './Train.js';
 import { exit } from 'process';
 import unzipper from 'unzipper';
 
-if (!process.env.KEY) {
+if (!process.env.API_KEY) {
     console.error('No API key!');
     exit(1);
 }
@@ -176,7 +176,7 @@ const shapeLineMap = new Map(
     )
 );
 
-const etdUrl = 'https://api.bart.gov/api/etd.aspx?cmd=etd&orig=ALL&json=y&key=' + process.env.KEY;
+const etdUrl = 'https://api.bart.gov/api/etd.aspx?cmd=etd&orig=ALL&json=y&key=' + process.env.API_KEY;
 const getTrainLengths = async () => {
     const etds = await fetch(etdUrl).then(res => res.json()).then(data => data.root.station)
     // Create map of lengths of trains departing from each station
