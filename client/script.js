@@ -7,11 +7,14 @@ map.on('click', () => highlightPath(null));
 
 const frontIconFiles = ['Red-N', 'Red-S', 'Orange-N', 'Orange-S', 'Yellow-N', 'Yellow-S', 'Green-N', 'Green-S', 'Blue-N', 'Blue-S'];
 const frontIcons = {};
+const mobile = window.innerWidth <= 600;
+const iconSize = mobile ? [33, 30] : [45, 41];
+const iconAnchor = mobile ? [18, 15] : [23, 21]
 for (const file of frontIconFiles)
     frontIcons[file] = L.icon({
         iconUrl: 'assets/cars/' + file + '.png',
-        iconSize: [45, 41],
-        iconAnchor: [23, 21]
+        iconSize,
+        iconAnchor
     });
 
 const timezoneOffset = new Date().getTimezoneOffset() * 60; // Time change in seconds
@@ -83,11 +86,12 @@ const highlightPath = shape => {
 
 const trainMarkers = new Map();
 const createPopup = (message, marker) => `
-                ${message[0]} - ${marker.line} (${marker.length} cars)
-                <br>
-                Next: ${message[2]} at ${stringifyTime(parseInt(message[3]))}
-                <br>
-                ${Math.round(parseFloat(message[4]) * 2.23694 /* m/s to mph */)} mph`;
+    ${message[0]} - ${marker.line} (${marker.length} cars)
+    <br>
+    Next: ${message[2]} at ${stringifyTime(parseInt(message[3]))}
+    <br>
+    ${Math.round(parseFloat(message[4]) * 2.23694 /* m/s to mph */)} mph
+`;
 
 const eventSource = new EventSource('https://bart.eliasfretwell.com:3000');
 eventSource.addEventListener('create', e => {
@@ -114,8 +118,8 @@ eventSource.addEventListener('create', e => {
 eventSource.addEventListener('delete', e => {
     const messages = e.data.split(';');
     for (const message of messages) {
-        map.removeLayer(trainMarkers.get(e.data));
-        trainMarkers.delete(e.data);
+        map.removeLayer(trainMarkers.get(message));
+        trainMarkers.delete(message);
     }
 });
 eventSource.addEventListener('move', e => {
