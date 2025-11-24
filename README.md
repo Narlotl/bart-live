@@ -1,5 +1,8 @@
 # bart-simulation
+<img src="https://bart.eliasfretwell.com/assets/icon.png">
+
 A real-time simulation of Bay Area Rapid Transit trains.
+
 
 Since BART doesn't publish GPS data, this is an estimate of where trains are in real time. It uses the [GTFS-RT](https://gtfs.org/documentation/overview/#gtfs-realtime) feed to calculate the average speed between stops. From there, the train moves along the actual path, defined by [shapes.txt](https://gtfs.org/documentation/schedule/reference/#shapestxt) in the [static GTFS](https://gtfs.org/documentation/overview/#gtfs-schedule).
 
