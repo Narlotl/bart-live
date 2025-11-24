@@ -66,6 +66,9 @@ const getPreviousStop = (tripId, shape, firstStop, delay, time, arrive) => {
             }
         };
 
+    if (firstStop.startsWith('C80' /* Pittsburg/Bay Point */) && shape[2] === '1') // Don't add Pittsburg Center to Yellow-S trains from Pittsburg / Bay Point
+        return;
+
     for (let i = 0; i < stopTimes.length; i++) {
         if (stopTimes[i][0] === tripId) {
             if (stopTimes[i][3] === firstStop)

@@ -28,8 +28,10 @@ export class Train {
                     this.index = i;
                     const totalDistance = this.distanceToNextStop();
                     const distanceToSkip = // Distance travelled past previous stop
-                        totalDistance *
-                        (time - previousStop.departure.time.low) / (this.nextStation.arrive - previousStop.departure.time.low); // Percent of time passed
+                        Math.max(0, // If time is before departure (happens with Yellow-S 6XX trains), don't skip a negative amount
+                            totalDistance *
+                            (time - previousStop.departure.time.low) / (this.nextStation.arrive - previousStop.departure.time.low) // Percent of time passed
+                        );
                     let distanceSkipped = 0;
                     let skipDistance;
                     while (distanceSkipped + (skipDistance = points[this.index][2]) < distanceToSkip) {
