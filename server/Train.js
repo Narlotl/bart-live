@@ -27,12 +27,12 @@ export class Train {
                 if (searchForPrevious) {
                     this.index = i;
                     const totalDistance = this.distanceToNextStop();
-                    const distanceToSkip = // distance travelled past previous stop
+                    const distanceToSkip = // Distance travelled past previous stop
                         totalDistance *
                         (time - previousStop.departure.time.low) / (this.nextStation.arrive - previousStop.departure.time.low); // Percent of time passed
                     let distanceSkipped = 0;
                     let skipDistance;
-                    while (distanceSkipped + (skipDistance = points[this.index + 1][2]) < distanceToSkip) {
+                    while (distanceSkipped + (skipDistance = points[this.index][2]) < distanceToSkip) {
                         distanceSkipped += skipDistance;
                         this.index++;
                     }
@@ -47,7 +47,7 @@ export class Train {
                     this.lat = finalPoint.lat2, this.lon = finalPoint.lon2;
                     this.distanceToNext = point[2] - pointSkipDistance;
 
-                    this.speed = (totalDistance - distanceToSkip /* distance between current location and stop */)
+                    this.speed = (totalDistance - distanceToSkip) // Distance between current location and stop
                         / (this.nextStation.arrive - time);
 
                     searchStop = this.nextStation.station;
@@ -63,47 +63,49 @@ export class Train {
         messageObject.create.push(tripId + ',' + line + ',' + idToStation(this.nextStation.station) + ',' + this.nextStation.arrive + ',' + this.speed + ',' + shape + ',' + length);
     }
 
-    move(time, timeStep, timeSpeed = 1) {
-        if (time < this.departTime) // Only move train if it has left station
-            return;
+    step(distance) {
+        if (this.nextStation === undefined || this.index === this.points.length)
+            return ['delete', this.tripId];
 
-        if (this.distanceToNext === 0) { // Move to next point on segment
-            if (this.nextStation === undefined || this.index === this.points.length)
-                return ['delete', this.tripId];
+        let point = this.points[this.index];
+        if (point.length === 5 && point[4] === this.nextStation.station) {
+            // Arrived at station
+            const trainDone = this.advanceStation(this.nextStation.depart);
+            if (trainDone)
+                // If the train has no stops left, end without sending station message
+                return trainDone;
 
-            const point = this.points[this.index];
+            return ['station', this.tripId + ',' + this.line + ',' + idToStation(this.nextStation.station) + ',' + this.nextStation.arrive + ',' + this.speed];
+        }
+
+        if (distance >= this.distanceToNext) {
+            // Move to next segment
+            distance -= this.distanceToNext;
+            this.index++;
+
+            point = this.points[this.index];
             this.lat = point[0];
             this.lon = point[1];
             this.distanceToNext = point[2];
             this.direction = point[3];
 
-            if (point.length === 5 && point[4] === this.nextStation.station) {
-                // Arrived at station
-
-                const trainDone = this.advanceStation();
-                if (trainDone)
-                    // If the train has no stops left, end without sending station message
-                    return trainDone;
-
-                return ['station', this.tripId + ',' + this.line + ',' + idToStation(this.nextStation.station) + ',' + this.nextStation.arrive + ',' + this.speed];
-            }
-
-            this.index++;
+            return this.step(distance);
         }
 
-        // Calculate new position
-        let stepDistance = this.speed * (timeStep * timeSpeed + this.timeToMakeUp);
-        this.timeToMakeUp = 0; // reset after it is accounted for
-        if (stepDistance > this.distanceToNext) { // Don't go past the end of the segment
-            // If the train should have gone further than the clamped distance, keep track of how much time was lost so it can be made up at the next segment
-            this.timeToMakeUp = (stepDistance - this.distanceToNext) / this.speed;
-            stepDistance = this.distanceToNext;
-        }
-        const stepPoint = geod.Direct(this.lat, this.lon, this.direction, stepDistance, outmask);
+        // Move along portion of segment
+        const stepPoint = geod.Direct(this.lat, this.lon, this.direction, distance, outmask);
         this.lat = stepPoint.lat2, this.lon = stepPoint.lon2;
-        this.distanceToNext -= stepDistance;
+        this.distanceToNext -= distance;
 
         return ['move', this.tripId + ',' + this.lat + ',' + this.lon];
+    }
+
+    move(time, timeStep, timeSpeed = 1) {
+        if (time < this.departTime) // Only move train if it has left station
+            return;
+
+        // Calculate new position
+        return this.step(this.speed * timeStep * timeSpeed);
     }
 
     distanceToNextStop() {
@@ -143,7 +145,7 @@ export class Train {
         this.messageObject.update.push(this.tripId + ',' + this.line + ',' + idToStation(this.nextStation.station) + ',' + this.nextStation.arrive + ',' + this.speed);
     }
 
-    advanceStation(time = this.departTime) {
+    advanceStation(time) {
         const station = this.stops.shift();
 
         if (this.stops.length === 0) { // End of line

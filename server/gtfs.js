@@ -324,6 +324,7 @@ export const updateTrains = async (trains, messageObject) => {
                     length = arrivalObject.length;
             }
         }
+
         const train = new Train(tripId, line, shape, length, points[shape], stops, previousStop, time, messageObject);
         trains.push(train);
     }
