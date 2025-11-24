@@ -106,8 +106,7 @@ const createPopup = (message, marker) => `
     ${Math.round(parseFloat(message[4]) * 2.23694 /* m/s to mph */)} mph
 `;
 
-//const eventSource = new EventSource('https://bart.eliasfretwell.com:3000');
-const eventSource = new EventSource('http://localhost:3000');
+const eventSource = new EventSource('https://bart.eliasfretwell.com:3000');
 eventSource.addEventListener('create', e => {
     const messages = e.data.split(';');
     for (let message of messages) {
