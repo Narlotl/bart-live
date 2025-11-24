@@ -180,15 +180,26 @@ const shapeLineMap = new Map(
 );
 
 const etdUrl = 'https://api.bart.gov/api/etd.aspx?cmd=etd&orig=ALL&json=y&key=' + process.env.API_KEY;
-const getTrainLengths = async () => {
+export const updateTrains = async (trains, messageObject) => {
+    const buf = await fetch('https://api.bart.gov/gtfsrt/tripupdate.aspx').then(res => res.arrayBuffer());
+    const feed = GtfsRealtimeBindings.transit_realtime.FeedMessage.decode(new Uint8Array(buf));
+
     const etds = await fetch(etdUrl).then(res => res.json()).then(data => data.root.station)
     // Create map of lengths of trains departing from each station
     // Maps station to list of lines, which have the length for the train on them
     const trainLengths = {};
+    const departures = [];
     for (const station of etds) {
         const lines = {};
+        const stationDepartures = [station.abbr];
         for (const destination of station.etd) {
-            for (const line of destination.estimate) {
+            let destDepartures = destination.destination + ': ';
+            for (let i = 0; i < destination.estimate.length; i++) {
+                const line = destination.estimate[i];
+
+                if (i > 0)
+                    destDepartures += ', ';
+                destDepartures += line.minutes;
                 // Loop through all in case of something unexpected in the first position
                 const lineName = line.color[0] + line.color.substring(1).toLowerCase() + '-' + line.direction[0]; // Convert into GTFS line name
                 const departure = lines[lineName] || {};
@@ -199,18 +210,12 @@ const getTrainLengths = async () => {
                     lines[lineName] = departure;
                 }
             }
+            stationDepartures.push(destDepartures);
         }
+        departures.push(stationDepartures.join('|'));
         trainLengths[abbreviationToId(station.abbr)] = lines;
     }
-
-    return trainLengths;
-}
-
-export const updateTrains = async (trains, messageObject) => {
-    const buf = await fetch('https://api.bart.gov/gtfsrt/tripupdate.aspx').then(res => res.arrayBuffer());
-    const feed = GtfsRealtimeBindings.transit_realtime.FeedMessage.decode(new Uint8Array(buf));
-
-    let trainLengths;
+    messageObject.departures = departures;
 
     let time = Date.now() / 1000;
 
@@ -306,12 +311,6 @@ export const updateTrains = async (trains, messageObject) => {
         if (stops.length === 1 && (!previousStop || stops[0].arrive <= time))
             // Nowhere to start from
             continue;
-
-        // Only fetch lengths if needed
-        if (!trainLengths) {
-            trainLengths = await getTrainLengths();
-            time = Date.now() / 1000;
-        }
 
         // TODO: if train is leaving, use previousStop
         let length = 8;

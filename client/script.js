@@ -84,6 +84,19 @@ const highlightPath = shape => {
     }
 };
 
+const stationMarkers = new Map();
+const stationIconOptions = { className: 'station-icon', iconSize: [50, 15], iconAnchor: [25, 8] };
+fetch('assets/stations.json').then(res => res.json()).then(data => {
+    for (const station of data) {
+        stationIconOptions.html = station.code;
+        const marker = L.marker(station.latLng, { icon: L.divIcon(stationIconOptions) }).addTo(map);
+        marker.bindPopup('<b>' + station.name + '</b>');
+        marker.setZIndexOffset(-1000);
+        marker.name = station.name;
+        stationMarkers.set(station.code, marker);
+    }
+});
+
 const trainMarkers = new Map();
 const createPopup = (message, marker) => `
     ${message[0]} - ${marker.line} (${marker.length} cars)
@@ -93,7 +106,8 @@ const createPopup = (message, marker) => `
     ${Math.round(parseFloat(message[4]) * 2.23694 /* m/s to mph */)} mph
 `;
 
-const eventSource = new EventSource('https://bart.eliasfretwell.com:3000');
+//const eventSource = new EventSource('https://bart.eliasfretwell.com:3000');
+const eventSource = new EventSource('http://localhost:3000');
 eventSource.addEventListener('create', e => {
     const messages = e.data.split(';');
     for (let message of messages) {
@@ -142,3 +156,11 @@ const updatePopup = e => {
 eventSource.addEventListener('station', updatePopup);
 eventSource.addEventListener('update', updatePopup);
 eventSource.addEventListener('time', e => timeWindow.update(e.data));
+eventSource.addEventListener('departures', e => {
+    const stations = e.data.split(';');
+    for (const station of stations) {
+        const departures = station.split('|');
+        const marker = stationMarkers.get(departures[0]); // Station code
+        marker.bindPopup('<b>' + marker.name + '</b><br>' + departures.slice(1).join('<br>'));
+    }
+});

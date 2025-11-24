@@ -18,6 +18,12 @@ body, .leaflet-container {
     transition: 0.1s transform;
 }
 
+.station-icon {
+    background-color: white;
+    border: 2px solid black;
+    text-align: center;
+}
+
 #map {
     flex: 1;
 }

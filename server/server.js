@@ -89,9 +89,9 @@ const messages = {
     move: [],
     station: [],
     update: [],
+    departures: []
 };
 let nextStepTime = Date.now() / 1000 + timeStep;
-updateTrains(trains, messages)
 
 // Simulation loop
 while (true) {
@@ -99,7 +99,7 @@ while (true) {
 
     // Update trains every 30 seconds
     if (time >= updateTime) {
-        //updateTrains(trains, messages);
+        updateTrains(trains, messages);
         updateTime += 30 * timeSpeed;
     }
 

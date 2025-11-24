@@ -1,0 +1,402 @@
+[
+    {
+        "code": "12TH",
+        "name": "12th Street / Oakland City Center",
+        "latLng": [
+            37.803482,
+            -122.27163
+        ]
+    },
+    {
+        "code": "19TH",
+        "name": "19th Street Oakland",
+        "latLng": [
+            37.808078,
+            -122.268758
+        ]
+    },
+    {
+        "code": "MCAR",
+        "name": "MacArthur",
+        "latLng": [
+            37.828803,
+            -122.267105
+        ]
+    },
+    {
+        "code": "WOAK",
+        "name": "West Oakland",
+        "latLng": [
+            37.804888,
+            -122.295151
+        ]
+    },
+    {
+        "code": "EMBR",
+        "name": "Embarcadero",
+        "latLng": [
+            37.792762,
+            -122.397037
+        ]
+    },
+    {
+        "code": "MONT",
+        "name": "Montgomery Street",
+        "latLng": [
+            37.789173,
+            -122.401587
+        ]
+    },
+    {
+        "code": "POWL",
+        "name": "Powell Street",
+        "latLng": [
+            37.784606,
+            -122.407331
+        ]
+    },
+    {
+        "code": "CIVC",
+        "name": "Civic Center / UN Plaza",
+        "latLng": [
+            37.779408,
+            -122.413826
+        ]
+    },
+    {
+        "code": "16TH",
+        "name": "16th Street / Mission",
+        "latLng": [
+            37.765173,
+            -122.419704
+        ]
+    },
+    {
+        "code": "24TH",
+        "name": "24th Street / Mission",
+        "latLng": [
+            37.752419,
+            -122.418468
+        ]
+    },
+    {
+        "code": "GLEN",
+        "name": "Glen Park",
+        "latLng": [
+            37.733235,
+            -122.433515
+        ]
+    },
+    {
+        "code": "BALB",
+        "name": "Balboa Park",
+        "latLng": [
+            37.721747,
+            -122.447457
+        ]
+    },
+    {
+        "code": "DALY",
+        "name": "Daly City",
+        "latLng": [
+            37.706259,
+            -122.468908
+        ]
+    },
+    {
+        "code": "LAKE",
+        "name": "Lake Merritt",
+        "latLng": [
+            37.797322,
+            -122.265247
+        ]
+    },
+    {
+        "code": "FTVL",
+        "name": "Fruitvale",
+        "latLng": [
+            37.774841,
+            -122.224081
+        ]
+    },
+    {
+        "code": "COLS",
+        "name": "Coliseum",
+        "latLng": [
+            37.753576,
+            -122.196716
+        ]
+    },
+    {
+        "code": "SANL",
+        "name": "San Leandro",
+        "latLng": [
+            37.721784,
+            -122.16074
+        ]
+    },
+    {
+        "code": "BAYF",
+        "name": "Bay Fair",
+        "latLng": [
+            37.696908,
+            -122.126446
+        ]
+    },
+    {
+        "code": "HAYW",
+        "name": "Hayward",
+        "latLng": [
+            37.669699,
+            -122.086958
+        ]
+    },
+    {
+        "code": "SHAY",
+        "name": "South Hayward",
+        "latLng": [
+            37.63434,
+            -122.057182
+        ]
+    },
+    {
+        "code": "UCTY",
+        "name": "Union City",
+        "latLng": [
+            37.590735,
+            -122.017248
+        ]
+    },
+    {
+        "code": "FRMT",
+        "name": "Fremont",
+        "latLng": [
+            37.55748,
+            -121.976619
+        ]
+    },
+    {
+        "code": "ROCK",
+        "name": "Rockridge",
+        "latLng": [
+            37.844755,
+            -122.251235
+        ]
+    },
+    {
+        "code": "ORIN",
+        "name": "Orinda",
+        "latLng": [
+            37.878481,
+            -122.183667
+        ]
+    },
+    {
+        "code": "LAFY",
+        "name": "Lafayette",
+        "latLng": [
+            37.893183,
+            -122.12462
+        ]
+    },
+    {
+        "code": "WCRK",
+        "name": "Walnut Creek",
+        "latLng": [
+            37.905791,
+            -122.067327
+        ]
+    },
+    {
+        "code": "PHIL",
+        "name": "Pleasant Hill / Contra Costa Centre",
+        "latLng": [
+            37.928434,
+            -122.055971
+        ]
+    },
+    {
+        "code": "CONC",
+        "name": "Concord",
+        "latLng": [
+            37.973757,
+            -122.029072
+        ]
+    },
+    {
+        "code": "NCON",
+        "name": "North Concord / Martinez",
+        "latLng": [
+            38.003383,
+            -122.024512
+        ]
+    },
+    {
+        "code": "PITT",
+        "name": "Pittsburg / Bay Point",
+        "latLng": [
+            38.01891,
+            -121.944236
+        ]
+    },
+    {
+        "code": "ASHB",
+        "name": "Ashby",
+        "latLng": [
+            37.853072,
+            -122.269771
+        ]
+    },
+    {
+        "code": "DBRK",
+        "name": "Downtown Berkeley",
+        "latLng": [
+            37.87011,
+            -122.268109
+        ]
+    },
+    {
+        "code": "NBRK",
+        "name": "North Berkeley",
+        "latLng": [
+            37.874005,
+            -122.283523
+        ]
+    },
+    {
+        "code": "PLZA",
+        "name": "El Cerrito Plaza",
+        "latLng": [
+            37.90261,
+            -122.29892
+        ]
+    },
+    {
+        "code": "DELN",
+        "name": "El Cerrito Del Norte",
+        "latLng": [
+            37.925184,
+            -122.316892
+        ]
+    },
+    {
+        "code": "RICH",
+        "name": "Richmond",
+        "latLng": [
+            37.936758,
+            -122.353047
+        ]
+    },
+    {
+        "code": "CAST",
+        "name": "Castro Valley",
+        "latLng": [
+            37.690737,
+            -122.075601
+        ]
+    },
+    {
+        "code": "WDUB",
+        "name": "West Dublin / Pleasanton",
+        "latLng": [
+            37.699721,
+            -121.928277
+        ]
+    },
+    {
+        "code": "DUBL",
+        "name": "Dublin / Pleasanton",
+        "latLng": [
+            37.701646,
+            -121.899229
+        ]
+    },
+    {
+        "code": "COLM",
+        "name": "Colma",
+        "latLng": [
+            37.684635,
+            -122.466157
+        ]
+    },
+    {
+        "code": "SSAN",
+        "name": "South San Francisco",
+        "latLng": [
+            37.664462,
+            -122.444211
+        ]
+    },
+    {
+        "code": "SBRN",
+        "name": "San Bruno",
+        "latLng": [
+            37.63773,
+            -122.416326
+        ]
+    },
+    {
+        "code": "MLBR",
+        "name": "Millbrae",
+        "latLng": [
+            37.600237,
+            -122.386757
+        ]
+    },
+    {
+        "code": "SFIA",
+        "name": "San Francisco International Airport",
+        "latLng": [
+            37.616091,
+            -122.391954
+        ]
+    },
+    {
+        "code": "OAKL",
+        "name": "Oakland International Airport",
+        "latLng": [
+            37.713256,
+            -122.212237
+        ]
+    },
+    {
+        "code": "PCTR",
+        "name": "Pittsburg Center",
+        "latLng": [
+            38.016847,
+            -121.889062
+        ]
+    },
+    {
+        "code": "ANTC",
+        "name": "Antioch",
+        "latLng": [
+            37.995373,
+            -121.780346
+        ]
+    },
+    {
+        "code": "WARM",
+        "name": "Warm Springs / South Fremont",
+        "latLng": [
+            37.502285,
+            -121.939395
+        ]
+    },
+    {
+        "code": "MLPT",
+        "name": "Milpitas",
+        "latLng": [
+            37.410277,
+            -121.891081
+        ]
+    },
+    {
+        "code": "BERY",
+        "name": "Berryessa / North San Jose",
+        "latLng": [
+            37.368473,
+            -121.874681
+        ]
+    }
+]
