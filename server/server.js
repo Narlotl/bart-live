@@ -66,10 +66,10 @@ createServer(options, async (req, res) => {
         'Access-Control-Allow-Origin': '*'
     });
 
-    setTimeStep();
-
-    const index = connections.length; // this connection's place in array
+    const index = connections.length; // This connection's place in array
     connections.push(res);
+
+    setTimeStep();
 
     // Send all current trains to connection
     let creationMessages = 'event: create\ndata: ';
