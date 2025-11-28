@@ -156,9 +156,30 @@ export class Train {
             return ['move', this.tripId + ',' + this.lat + ',' + this.lon];
         }
 
+        if (this.stops[0].arrive <= time)
+            // If the train has passed the next station, advance again
+            return this.advanceStation(time);
+
         this.nextStation = this.stops[0];
         this.departTime = station.depart;
 
         this.calculateSpeed(time);
+    }
+
+    /**
+    * Updates the train's stop at a specific index
+    * @param {number} index Index of stop, or -1 for nextStation
+    * @param {StopTimeUpdate} update GTFS stop update object
+    * @param {number} time Current time (only used when updating nextStation)
+    */
+    updateStop(index, update, time) {
+        const stop = index === -1 ? this.nextStation : this.stops[index];
+        const oldArrive = stop.arrive;
+        stop.arrive = update.arrival.time.low;
+        stop.depart = update.departure.time.low;
+        stop.delay = update.arrival.delay;
+        if (oldArrive !== stop.arrive)
+            // Update speed if time changed
+            this.calculateSpeed(time);
     }
 }

@@ -41,8 +41,7 @@ const SECONDS_PER_DAY = 60 * 60 * 24;
 const stringTimeToSeconds = str => {
     // hh:mm:ss
     const parts = str.split(':');
-    return parseInt(parts[0] * 3600) + parseInt(parts[1] * 60) + parseInt(parts[2]) + 8 * 3600 /* timezone offset */;
-    // TODO: use timezone in agency.txt
+    return parseInt(parts[0] * 3600) + parseInt(parts[1] * 60) + parseInt(parts[2]);
 };
 /**
  * Finds the previous stop for a trip, or nothing if there is no previous stop.
@@ -79,12 +78,16 @@ const getPreviousStop = (tripId, shape, firstStop, delay, time, arrive) => {
             while (++i < stopTimes.length && (stop = stopTimes[i])[0] === tripId) {
                 if (stop[3] === firstStop) {
                     const previous = stopTimes[i - 1];
-                    const dayStart = time - (time % SECONDS_PER_DAY);
+                    const localTime = time - 8 * 3600;
+                    // TODO: use timezone in agency.txt
+                    const localDayStart = localTime - (localTime % SECONDS_PER_DAY);
+                    if (time < localDayStart + stringTimeToSeconds(previous[2]) + delay)
+                        console.log(tripId, previous[2], delay, localDayStart + stringTimeToSeconds(previous[2]) + delay, time)
                     return { // GTFS stop structure
                         stopId: previous[3],
                         departure: {
                             time: {
-                                low: Math.min(dayStart + stringTimeToSeconds(previous[2]) + delay, time)
+                                low: Math.min(localDayStart + stringTimeToSeconds(previous[2]) + delay + 8 * 3600 /* timezone offset  TODO: use timezene */, time)
                             }
                         }
                     };
@@ -225,41 +228,40 @@ export const updateTrains = async (trains, messageObject) => {
 
         for (let j = 0; j < trains.length; j++) {
             if (trains[j].tripId === tripId) {
+                // Matching train found
                 const train = trains[j], updates = trip.tripUpdate.stopTimeUpdate;
-                if (train.nextStation === undefined)
-                    continue;
 
-                let stopsLeft = train.stops.length + 1;
-                for (let k = 0; k < updates.length && stopsLeft > 0; k++) {
-                    const update = updates[k];
+                const stopsToRemove = [];
 
-                    if (train.nextStation && update.stopId === train.nextStation.station) {
+                for (const update of updates) {
+                    if (train.nextStation === undefined)
+                        break;
+
+                    if (update.stopId === train.nextStation.station) {
+                        // Update nextStation
                         if (update.arrival.time.low <= time) { // If the nextStation has passed, update to the new nextStation
                             train.advanceStation(time);
                             train.departTime = time; // Don't stop if passed
-                            continue;
                         }
-
-                        const oldArrive = train.nextStation.arrive;
-                        train.nextStation.arrive = update.arrival.time.low;
-                        train.nextStation.depart = update.departure.time.low;
-                        train.nextStation.delay = update.arrival.delay;
-                        if (oldArrive !== update.arrival.time.low)
-                            // Update speed if time changed
-                            train.calculateSpeed(time);
+                        else
+                            train.updateStop(-1, update, time);
                         continue;
                     }
 
-                    for (let l = 0; l < train.stops.length; l++) {
-                        if (train.stops[l].station === updates[k].stopId) {
-                            const stop = train.stops[l];
-                            stop.arrive = update.arrival.time.low;
-                            stop.depart = update.departure.time.low;
-                            stop.delay = update.arrival.delay;
+                    // Update future stops
+                    for (let k = 0; k < train.stops.kength; l++) {
+                        if (train.stops[k].station === update.stopId) {
+                            train.updateStop(k, update);
                             break;
                         }
+
+                        // If a stop wasn't matched, remove it
+                        stopsToRemove.push(k);
                     }
                 }
+
+                for (let k = 0; k < stopsToRemove.length; k++)
+                    train.stops.splice(stopsToRemove[k] - k /* shift index down to account for previous deletions */, 1);
 
                 continue trainLoop;
             }

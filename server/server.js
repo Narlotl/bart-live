@@ -63,7 +63,8 @@ createServer(options, async (req, res) => {
         'Content-Type': 'text/event-stream',
         'Cache-Control': 'no-cache',
         'Connection': 'keep-alive',
-        'Access-Control-Allow-Origin': '*'
+        'Vary': 'Origin',
+        'Access-Control-Allow-Origin': process.env.ENV === 'prod' ? 'https://bart.eliasfretwell.com' : '*'
     });
 
     const index = connections.length; // This connection's place in array
@@ -74,7 +75,8 @@ createServer(options, async (req, res) => {
     // Send all current trains to connection
     let creationMessages = 'event: create\ndata: ';
     for (const train of trains)
-        creationMessages += train.tripId + ',' + train.line + ',' + idToStation(train.nextStation.station) + ',' + train.nextStation.arrive + ',' + train.speed + ',' + train.shape + ',' + train.length + ';';
+        if (train.nextStation)
+            creationMessages += train.tripId + ',' + train.line + ',' + idToStation(train.nextStation.station) + ',' + train.nextStation.arrive + ',' + train.speed + ',' + train.shape + ',' + train.length + ';';
     res.write(creationMessages + '\n\n');
 
     res.on('close', () => {
