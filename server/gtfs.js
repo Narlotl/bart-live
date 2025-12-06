@@ -10,7 +10,7 @@ if (!process.env.API_KEY) {
 }
 
 const shapes = JSON.parse(readFileSync('shapes.json', 'utf8'));
-const points = JSON.parse(readFileSync('points.json', 'utf8'));
+export const points = JSON.parse(readFileSync('points.json', 'utf8'));
 
 // Download static GTFS files if they aren't already downloaded
 if (!existsSync('gtfs')) {
@@ -81,8 +81,6 @@ const getPreviousStop = (tripId, shape, firstStop, delay, time, arrive) => {
                     const localTime = time - 8 * 3600;
                     // TODO: use timezone in agency.txt
                     const localDayStart = localTime - (localTime % SECONDS_PER_DAY);
-                    if (time < localDayStart + stringTimeToSeconds(previous[2]) + delay)
-                        console.log(tripId, previous[2], delay, localDayStart + stringTimeToSeconds(previous[2]) + delay, time)
                     return { // GTFS stop structure
                         stopId: previous[3],
                         departure: {
@@ -108,7 +106,6 @@ const getPreviousStop = (tripId, shape, firstStop, delay, time, arrive) => {
                 stopId: stops[i - 1],
                 departure: {
                     time: {
-                        // TODO: if time goes over 70 mph, clamp it
                         low: time
                     }
                 }
@@ -118,52 +115,64 @@ const getPreviousStop = (tripId, shape, firstStop, delay, time, arrive) => {
 export const trips = readFileSync('gtfs/trips.txt', 'utf8')
     .split('\r\n').slice(1).map(l => l.split(','));
 // route_id,service_id,trip_id,trip_headsign,direction_id,block_id,shape_id,trip_load_information,wheelchair_accessible,bikes_allowed
-export const getTripShape = (train, stopCount) => {
+export const getTripShape = (train, stopCount, startIndex = 0) => {
     let route;
     // Search static GTFS for trip
-    for (let i = 0; i < trips.length; i++) {
-        if (trips[i][2] === train.id) {
-            if (trips[i][6])
-                return trips[i][6];
+    if (startIndex === 0) // If this has already been tried on a previous iteratoin, don't try again
+        for (let i = 0; i < trips.length; i++) {
+            if (trips[i][2] === train.id) {
+                if (trips[i][6])
+                    return trips[i][6];
 
-            // If there's no Q48B-5JD9-924T-DWEIshape, pick a shape on the route
-            route = trips[i][0].padStart(3, '0');
+                // If there's no shape, pick a shape on the route
+                route = trips[i][0].padStart(3, '0');
 
-            break;
+                break;
+            }
         }
-    }
 
     // Make a guess of what shape fits route and stops
     const shapeChoices = shapes.filter(shape => !route /* check all if no route */ || shape.shape.startsWith(route));
     // Track place on each option
     const choiceIndices = {};
 
-    for (const stop of train.tripUpdate.stopTimeUpdate) {
-        // Loop label: https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Statements/label
-        choiceLoop: for (let i = 0; i < shapeChoices.length; i++) {
-            const choice = shapeChoices[i];
+    // If the train only has one stop, choose a shape where that stop isn't the beginning
+    if (stopCount === 1) {
+        const prefix = train.tripUpdate.stopTimeUpdate[0].stopId.substring(0, 3); // Get station prefix
+        for (let i = 0; i < shapeChoices.length; i++)
+            if (!shapeChoices[i].stops[0].startsWith(prefix) && shapeChoices[i].stops.find(s => s.startsWith(prefix)))
+                return shapeChoices[i].shape;
+    }
 
-            for (let j = choiceIndices[choice.shape] || 0; j < choice.stops.length; j++) {
-                if (choice.stops[j] === stop.stopId) {
-                    choiceIndices[choice.shape] = j + 1;
+    for (let i = startIndex; i < train.tripUpdate.stopTimeUpdate.length; i++) {
+        const stop = train.tripUpdate.stopTimeUpdate[i];
+        // Loop label: https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Statements/label
+        // Loop through each choice and check if stop is found
+        choiceLoop: for (let j = 0; j < shapeChoices.length; j++) {
+            const choice = shapeChoices[j];
+
+            // Loop through each stop on shape to make sure they are in order
+            // Index only increases, so if it doesn't find the next stop, that means the shape isn't in the correct order
+            for (let k = choiceIndices[choice.shape] || 0; k < choice.stops.length; k++) {
+                if (choice.stops[k] === stop.stopId) {
+                    // Stop found, check next shape
+                    choiceIndices[choice.shape] = k + 1;
                     continue choiceLoop;
                 }
             }
 
+            if (shapeChoices.length === 1)
+                // If removal would leave choices empty, the train uses a combination of shapes, so use the best match (last choice left) for the portion it fits
+                // After that, call the function again with the other portion of the shape and get combination of shapes
+                return [{ shape: shapeChoices[0].shape, stop: train.tripUpdate.stopTimeUpdate[i].stopId }].concat(getTripShape(train, stopCount, i));
+
             // Remove choices that don't have stops in order
-            shapeChoices.splice(i, 1);
-            i--;
+            shapeChoices.splice(j, 1);
+            j--;
         }
     }
 
-    if (stopCount > 1)
-        return shapeChoices[0].shape;
-
-    // If the train only has one stop, choose a shape where that stop isn't the beginning
-    const prefix = train.tripUpdate.stopTimeUpdate[0].stopId.substring(0, 3); // get station prefix
-    for (let i = 0; i < shapeChoices.length; i++)
-        if (!shapeChoices[i].stops[0].startsWith(prefix))
-            return shapeChoices[i].shape;
+    return shapeChoices[0].shape;
 };
 
 export const routes = readFileSync('gtfs/routes.txt', 'utf8')
@@ -171,7 +180,7 @@ export const routes = readFileSync('gtfs/routes.txt', 'utf8')
     .reverse(); // start with longest routes first
 // route_id,route_short_name,route_long_name,route_desc,route_type,route_url,route_color,route_text_color
 
-const shapeLineMap = new Map(
+export const shapeLineMap = new Map(
     shapes.map(
         shape => [
             shape.shape,
@@ -185,6 +194,7 @@ const shapeLineMap = new Map(
 const etdUrl = 'https://api.bart.gov/api/etd.aspx?cmd=etd&orig=ALL&json=y&key=' + process.env.API_KEY;
 export const updateTrains = async (trains, messageObject) => {
     const buf = new Uint8Array(await fetch('https://api.bart.gov/gtfsrt/tripupdate.aspx').then(res => res.arrayBuffer()));
+    //const buf = new Uint8Array(readFileSync('tripupdate.aspx')); // Testing purposes
     const feed = GtfsRealtimeBindings.transit_realtime.FeedMessage.decode(buf);
 
     const etds = await fetch(etdUrl).then(res => res.json()).then(data => data.root.station)
@@ -220,7 +230,7 @@ export const updateTrains = async (trains, messageObject) => {
     }
     messageObject.departures = departures;
 
-    let time = Date.now() / 1000;
+    const time = Date.now() / 1000;
 
     trainLoop: for (let i = 0; i < feed.entity.length; i++) {
         const trip = feed.entity[i];
@@ -291,7 +301,8 @@ export const updateTrains = async (trains, messageObject) => {
             continue;
 
         try {
-            const shape = getTripShape(trip, stops.length), line = shapeLineMap.get(shape);
+            const shape = getTripShape(trip, stops.length), shapeName = typeof shape === 'object' ? shape[0].shape : shape; // Use first element if list of shapes
+            const line = shapeLineMap.get(shapeName);
 
             if (
                 !previousStop &&
@@ -306,10 +317,8 @@ export const updateTrains = async (trains, messageObject) => {
                 Pittsburg Center and Antioch stations (in the 600 range) have no
                 match in GTFS. Service alerts for the system are still available."
                 */
-            ) {
-                previousStop = getPreviousStop(tripId, shape, stops[0].station, stops[0].delay, time, stops[0].arrive);
-                //console.log(tripId, stops[0], previousStop)
-            }
+            )
+                previousStop = getPreviousStop(tripId, shapeName, stops[0].station, stops[0].delay, time, stops[0].arrive);
 
             if (stops.length === 1 && (!previousStop || stops[0].arrive <= time))
                 // Nowhere to start from
@@ -330,7 +339,7 @@ export const updateTrains = async (trains, messageObject) => {
                 }
             }
 
-            const train = new Train(tripId, line, shape, length, points[shape], stops, previousStop, time, messageObject);
+            const train = new Train(tripId, line, shape, length, points[shapeName], stops, previousStop, time, messageObject);
             trains.push(train);
         }
         catch (e) {
@@ -351,4 +360,5 @@ if (process.argv[1].endsWith('gtfs.js')) {
         station: [],
         update: [],
     });
+    //console.log(trains)
 }

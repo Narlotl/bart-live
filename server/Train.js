@@ -1,4 +1,4 @@
-import { idToStation } from './gtfs.js';
+import { idToStation, points, shapeLineMap } from './gtfs.js';
 
 import geodesic from 'geographiclib-geodesic';
 const Geodesic = geodesic.Geodesic;
@@ -9,7 +9,6 @@ export class Train {
     constructor(tripId, line, shape, length = 8, points, stops, previousStop, time, messageObject) {
         this.tripId = tripId;
         this.line = line;
-        this.shape = shape;
         this.length = length;
         this.points = points;
         this.stops = stops;
@@ -18,12 +17,28 @@ export class Train {
         this.distanceToNext = 0;
         this.timeToMakeUp = 0;
         this.messageObject = messageObject;
+        if (typeof shape === 'object') {
+            // If shape is a list of shapes, handle it
+            this.shapeList = shape;
+            this.nextShape();
+        }
+        else {
+            this.shape = shape;
+            this.moveToFirstStop(previousStop, time);
+        }
 
-        // Start train at its first stop
+
+        messageObject.create.push(tripId + ',' + line + ',' + idToStation(this.nextStation.station) + ',' + this.nextStation.arrive + ',' + this.speed + ',' + shape + ',' + length);
+    }
+
+    /**
+     * Sets train index to be at its first stop
+     */
+    moveToFirstStop(previousStop, time) {
         let searchStop = previousStop ? previousStop.stopId : this.nextStation.station;
         let searchForPrevious = previousStop;
-        for (let i = 0; i < points.length; i++) {
-            if (points[i].length === 5 && points[i][4] === searchStop) {
+        for (let i = 0; i < this.points.length; i++) {
+            if (this.points[i].length === 5 && this.points[i][4] === searchStop) {
                 if (searchForPrevious) {
                     this.index = i;
                     const totalDistance = this.distanceToNextStop();
@@ -34,12 +49,12 @@ export class Train {
                         );
                     let distanceSkipped = 0;
                     let skipDistance;
-                    while (distanceSkipped + (skipDistance = points[this.index][2]) < distanceToSkip) {
+                    while (distanceSkipped + (skipDistance = this.points[this.index][2]) < distanceToSkip) {
                         distanceSkipped += skipDistance;
                         this.index++;
                     }
                     // Closest point to position
-                    const point = points[this.index];
+                    const point = this.points[this.index];
                     this.lat = point[0];
                     this.lon = point[1];
                     this.direction = point[3];
@@ -61,8 +76,18 @@ export class Train {
                 break;
             }
         }
+    }
 
-        messageObject.create.push(tripId + ',' + line + ',' + idToStation(this.nextStation.station) + ',' + this.nextStation.arrive + ',' + this.speed + ',' + shape + ',' + length);
+    /**
+     * Move to next shape if the train is on a combination of shapes
+     */
+    nextShape() {
+        const shape = this.shapeList.shift();
+        this.shape = shape.shape;
+        this.shapeChange = shape.stop;
+        this.line = shapeLineMap.get(this.shape);
+        this.points = points[this.shape];
+        this.moveToFirstStop();
     }
 
     step(distance) {
@@ -155,6 +180,10 @@ export class Train {
             this.distanceToNext = 0;
             return ['move', this.tripId + ',' + this.lat + ',' + this.lon];
         }
+
+        if (station.station === this.shapeChange)
+            // Go to next shape if train is at the switch station
+            this.nextShape();
 
         if (this.stops[0].arrive <= time)
             // If the train has passed the next station, advance again
