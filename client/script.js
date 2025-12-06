@@ -138,13 +138,23 @@ eventSource.addEventListener('delete', e => {
         trainMarkers.delete(message);
     }
 });
+const slideOptions = { duration: 100 };
 eventSource.addEventListener('move', e => {
+    const mapBounds = map.getBounds();
+
     const messages = e.data.split(';');
     for (let message of messages) {
         message = message.split(',');
         const marker = trainMarkers.get(message[0]);
-        const lat = parseFloat(message[1]), lon = parseFloat(message[2]);
-        marker.setLatLng([lat, lon]);
+        const newLatLng = [parseFloat(message[1]), parseFloat(message[2])], markerLatLng = marker.getLatLng();
+        // Only move it if the marker is visible
+        if (mapBounds.contains(newLatLng) || mapBounds.contains(markerLatLng)) {
+            if (markerLatLng.lat === 0)
+                // Don't slide if it's coming from start
+                marker.setLatLng(newLatLng);
+            else
+                marker.slideTo(newLatLng, slideOptions);
+        }
     }
 });
 const updatePopup = e => {
