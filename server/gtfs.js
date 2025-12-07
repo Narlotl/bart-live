@@ -1,3 +1,4 @@
+import { get, Agent } from 'https';
 import GtfsRealtimeBindings from 'gtfs-realtime-bindings';
 import { readFileSync, existsSync, writeFileSync } from 'fs';
 import { Train } from './Train.js';
@@ -191,13 +192,49 @@ export const shapeLineMap = new Map(
     )
 );
 
+// Fetch implementation using native HTTPS module
+const fetch = (url, agent) => new Promise((resolve, reject) => {
+    get(url, { agent }, resolve).on('error', reject).end();
+});
+
 const etdUrl = 'https://api.bart.gov/api/etd.aspx?cmd=etd&orig=ALL&json=y&key=' + process.env.API_KEY;
 export const updateTrains = async (trains, messageObject) => {
-    const buf = new Uint8Array(await fetch('https://api.bart.gov/gtfsrt/tripupdate.aspx').then(res => res.arrayBuffer()));
-    //const buf = new Uint8Array(readFileSync('tripupdate.aspx')); // Testing purposes
-    const feed = GtfsRealtimeBindings.transit_realtime.FeedMessage.decode(buf);
+    // Create persistent connection agent
+    const agent = new Agent({ keepAlive: true, maxSockets: 1 });
 
-    const etds = await fetch(etdUrl).then(res => res.json()).then(data => data.root.station)
+    let feed, etds;
+    try {
+        // Fetch GTFS-RT feed
+        const buf = await fetch('https://api.bart.gov/gtfsrt/tripupdate.aspx', agent)
+            .then(res => new Promise(resolve => {
+                // Read all bytes of chunked stream
+                let buf = Buffer.alloc(0), read;
+                res.on('readable', () => {
+                    while ((read = res.read()) !== null)
+                        buf = Buffer.concat([buf, read]);
+                });
+                res.on('end', () => resolve(buf));
+            })
+            );
+        //const buf = new Uint8Array(readFileSync('tripupdate.aspx')); // Testing purposes
+        feed = GtfsRealtimeBindings.transit_realtime.FeedMessage.decode(buf);
+
+        // Fetch train length data
+        etds = await fetch(etdUrl, agent).then(res => new Promise(resolve => {
+            let data = '';
+            res.on('data', chunk => data += chunk);
+            res.on('end', () => resolve(JSON.parse(data).root.station))
+        }));
+    }
+    catch (e) {
+        // Don't crash on network error
+        console.error(e);
+        return;
+    }
+
+    // Close persistent connection
+    agent.destroy();
+
     // Create map of lengths of trains departing from each station
     // Maps station to list of lines, which have the length for the train on them
     const trainLengths = {};
@@ -360,5 +397,5 @@ if (process.argv[1].endsWith('gtfs.js')) {
         station: [],
         update: [],
     });
-    //console.log(trains)
+    console.log(trains)
 }
