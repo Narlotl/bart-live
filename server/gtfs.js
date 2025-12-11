@@ -202,7 +202,7 @@ export const updateTrains = async (trains, messageObject) => {
     // Create persistent connection agent
     const agent = new Agent({ keepAlive: true, maxSockets: 1 });
 
-    let buf, etds;
+    let buf, feed, etds;
     try {
         // Fetch GTFS-RT feed
         buf = await fetch('https://api.bart.gov/gtfsrt/tripupdate.aspx', agent)
@@ -216,6 +216,10 @@ export const updateTrains = async (trains, messageObject) => {
                 res.on('end', () => resolve(buf));
             })
             );
+
+        //const buf = new Uint8Array(readFileSync('tripupdate.aspx')); // Testing purposes
+        // Create GTFS-RT feed object
+        feed = GtfsRealtimeBindings.transit_realtime.FeedMessage.decode(buf);
     }
     catch (e) {
         // Don't crash on network error
@@ -241,10 +245,6 @@ export const updateTrains = async (trains, messageObject) => {
 
     // Close persistent connection
     agent.destroy();
-
-    // Create GTFS-RT feed object
-    //const buf = new Uint8Array(readFileSync('tripupdate.aspx')); // Testing purposes
-    const feed = GtfsRealtimeBindings.transit_realtime.FeedMessage.decode(buf);
 
     // Create map of lengths of trains departing from each station
     // Maps station to list of lines, which have the length for the train on them
