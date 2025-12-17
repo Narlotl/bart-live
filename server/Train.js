@@ -132,7 +132,16 @@ export class Train {
             return;
 
         // Calculate new position
-        return this.step(this.speed * timeStep * timeSpeed);
+        const step = this.step(this.speed * timeStep * timeSpeed);
+
+        if (isNaN(this.lat)) {
+            // Delete NaN portion trains
+            console.log(this);
+            this.messageObject.delete.push(this.tripId);
+            return;
+        }
+
+        return step;
     }
 
     distanceToNextStop() {
