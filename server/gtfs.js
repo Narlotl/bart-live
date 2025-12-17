@@ -194,7 +194,12 @@ export const shapeLineMap = new Map(
 
 // Fetch implementation using native HTTPS module
 const fetch = (url, agent) => new Promise((resolve, reject) => {
-    get(url, { agent }, resolve).on('error', reject).end();
+    get(url, { agent }, res => {
+        if (res.statusCode < 300)
+            resolve(res);
+        // Error if status isn't OK
+        reject(res.statusCode);
+    }).on('error', reject).end();
 });
 
 const etdUrl = 'https://api.bart.gov/api/etd.aspx?cmd=etd&orig=ALL&json=y&key=' + process.env.API_KEY;
