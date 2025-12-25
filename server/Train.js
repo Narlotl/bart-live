@@ -76,6 +76,8 @@ export class Train {
                 break;
             }
         }
+        if (this.index === undefined)
+            console.log(this, previousStop);
     }
 
     /**
@@ -91,10 +93,10 @@ export class Train {
     }
 
     step(distance) {
-        if (this.nextStation === undefined || this.index === this.points.length)
+        let point = this.points[this.index];
+        if (this.nextStation === undefined || !point)
             return ['delete', this.tripId];
 
-        let point = this.points[this.index];
         if (point.length === 5 && point[4] === this.nextStation.station) {
             // Arrived at station
             const trainDone = this.advanceStation(this.nextStation.depart);
@@ -136,7 +138,6 @@ export class Train {
 
         if (isNaN(this.lat)) {
             // Delete NaN portion trains
-            console.log(this);
             this.messageObject.delete.push(this.tripId);
             return;
         }
