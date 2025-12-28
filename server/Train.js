@@ -85,7 +85,7 @@ export class Train {
      */
     nextShape() {
         const shape = this.shapeList.shift();
-        if (shape.length === 0) {
+        if (this.shapeList.length === 0) {
             // The last shape doesn't have a change and is just the regular shape string
             this.shape = shape;
             this.shapeChange = undefined;
