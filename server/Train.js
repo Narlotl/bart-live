@@ -85,8 +85,16 @@ export class Train {
      */
     nextShape() {
         const shape = this.shapeList.shift();
-        this.shape = shape.shape;
-        this.shapeChange = shape.stop;
+        if (shape.length === 0) {
+            // The last shape doesn't have a change and is just the regular shape string
+            this.shape = shape;
+            this.shapeChange = undefined;
+        }
+        else {
+            // All shapes before the last are an object with fields for the shape and the changing station
+            this.shape = shape.shape;
+            this.shapeChange = shape.stop;
+        }
         this.line = shapeLineMap.get(this.shape);
         this.points = points[this.shape];
         this.moveToFirstStop();
