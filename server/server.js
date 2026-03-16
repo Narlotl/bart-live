@@ -11,7 +11,7 @@ let time = Date.now() / 1000;
 // Start at nearest whole second because all train times are on seconds
 await sleep((Math.ceil(time) - time) * 1000);
 time = Math.ceil(time);
-let updateTime = time, updating = false;
+let updateTime, updating = true, trainDeleted = false;
 const trains = [];
 
 // Print train list when enter pressed
@@ -107,18 +107,29 @@ const messages = {
 };
 let nextStepTime = Date.now() / 1000 + timeStep;
 
+updateTrains(trains, messages).then(() => {
+    updateTime = time + 30 * timeSpeed;
+    setTimeStep();
+    updating = false;
+});
+
 // Simulation loop
 while (true) {
     // Step through time
 
     // Update trains every 30 seconds
     if (time >= updateTime && !updating) {
-        updating = true; // Since update is non-blocking, don't update if it's running
-        updateTrains(trains, messages).then(() => {
+        if (connectionStreams.length > 0 || trainDeleted) {
+            updating = true; // Since update is non-blocking, don't update if it's running
+            trainDeleted = false; // Reset deleted tracker
+            updateTrains(trains, messages).then(() => {
+                updateTime += 30 * timeSpeed;
+                setTimeStep();
+                updating = false;
+            });
+        }
+        else
             updateTime += 30 * timeSpeed;
-            setTimeStep();
-            updating = false;
-        });
     }
 
     for (let i = 0; i < trains.length; i++) {
@@ -140,6 +151,10 @@ while (true) {
     for (const event in messages) {
         if (messages[event].length === 0)
             continue;
+
+        // Track if a train was deleted so GTFS can be updated if there aren't any clients
+        if (!trainDeleted && event === 'delete')
+            trainDeleted = true;
 
         message += 'event: ' + event + '\n';
         message += 'data: ' + messages[event].join(';') + '\n\n';

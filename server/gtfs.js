@@ -126,7 +126,7 @@ export const getTripShape = (train, stopCount) => {
             if (trips[i][6])
                 return trips[i][6];
 
-            // If there's no Q48B-5JD9-924T-DWEIshape, pick a shape on the route
+            // If there's no shape, pick a shape on the route
             route = trips[i][0].padStart(3, '0');
 
             break;
@@ -156,6 +156,8 @@ export const getTripShape = (train, stopCount) => {
         }
     }
 
+    if (shapeChoices.length === 0)
+        return '001A_shp'
     if (stopCount > 1)
         return shapeChoices[0].shape;
 
