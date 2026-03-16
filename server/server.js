@@ -69,10 +69,9 @@ createServer(options, async (req, res) => {
         'Access-Control-Allow-Origin': process.env.ENV === 'prod' ? 'https://bart.eliasfretwell.com' : '*'
     });
 
-    const index = connectionStreams.length; // This connection's place in array
-
     const compression = createGzip();
     compression.pipe(res);
+    compression.index = connectionStreams.length; // This connection's place in array
     connectionStreams.push(compression);
 
     setTimeStep();
@@ -88,7 +87,11 @@ createServer(options, async (req, res) => {
     res.on('close', () => {
         console.log('disconnection');
 
-        connectionStreams.splice(index, 1);
+        connectionStreams.splice(compression.index, 1);
+        // Shift all following connections' indices down
+        for (let i = compression.index; i < connectionStreams.length; i++)
+            connectionStreams[i].index--;
+        console.log(connectionStreams)
 
         setTimeStep();
 
